@@ -1,0 +1,47 @@
+######################### FIREWALL RULE CREATION #######################################
+# This Template file provisions the Firewall Rules
+resources:
+# Resource 5: This creates a firewall rule for Prod Web Servers
+# Web servers firewall rule HTTP/80 and HTTPS/443
+- name: denpha-prod-web-servers-fr-allow-http-https
+  type: compute.v1.firewall
+  properties:
+    description: "This firewall rule grants http/https access from the Prod External LoadBalancer"
+    network: $(ref.denpha-prod-vpc.selfLink)
+    #sourceRanges: ["$(ref.external-load-balancer-ip-prod.selfLink)/32"] 
+    # Keeping the webservers Private but granting public access
+    sourceRanges: ["0.0.0.0/0"]
+    targetTags: ["prod-web-servers"]
+    allowed:
+    - IPProtocol: TCP
+      ports: ["80", "443"]
+
+# Resource 6: This creates a firewall rule for Prod App Servers
+# App servers firewall rule HTTP/80 and HTTPS/443 Network Access
+- name: denpha-prod-app-servers-fr-allow-http-https
+  type: compute.v1.firewall
+  properties:
+    description: "This firewall rule grants http/https access from the Prod App Internal LoadBalancer"
+    network: $(ref.denpha-prod-vpc.selfLink)
+    #sourceRanges: ["$(ref.external-load-balancer-ip-prod.selfLink)/32"]
+    sourceRanges: ["10.130.0.0/20"] #For now but will be updated to Bastion host before use
+    #The sourceRanges for the app firewall rule should be the CIDR for the Internal LB. but we do not have that yet. So, we will use the CIDR for the appserver subnet.
+    targetTags: ["prod-app-servers"]
+    allowed:
+    - IPProtocol: TCP
+      ports: ["80", "443"]
+
+# Resource 7: This creates a firewall rule for Prod DB Servers
+# DB servers firewall rule MySQL/3306 Network Access
+- name: denpha-prod-db-servers-fr-allow-mysql
+  type: compute.v1.firewall
+  properties:
+    description: "This firewall rule grants mysql access from the Prod db-server network"
+    network: $(ref.denpha-prod-vpc.selfLink)
+    #sourceRanges: ["$(ref.external-load-balancer-ip-prod.selfLink)/32"]
+    sourceRanges: ["10.140.0.0/20"] #For now but will be updated to Bastion host before use.
+    targetTags: ["prod-db-servers"]
+    allowed:
+    - IPProtocol: TCP
+      ports: ["3306"]   
+      #Since multiple values are not needed, we don't have to []

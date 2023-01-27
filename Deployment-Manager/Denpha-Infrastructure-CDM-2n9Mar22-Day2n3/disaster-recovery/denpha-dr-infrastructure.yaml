@@ -1,0 +1,43 @@
+#Resource 1: To establish or create Denpha VPC Network => Details to come from the network team
+resources:
+- name: denpha-dr-vpc
+  #description: "this network is for the denpha ecommerce application"
+  type: compute.v1.network
+  properties:
+    routingConfig:
+      routingMode: REGIONAL
+    autoCreateSubnetworks: false
+
+#Resource 2: To establish the Denpha Web-servers Subnet
+#Network details to be suplied by client or you work it out
+#We reference the vpc by using the name of the vpc above, with upper case L
+- name: denpha-dr-web-server-sn
+  #description: "this subnet is for denpha web servers gce resource"
+  type: compute.v1.subnetwork
+  properties:
+    ipCidrRange: 10.130.0.0/20
+    network: $(ref.denpha-dr-vpc.selfLink)
+    region: us-central1
+
+#Resource 3: To establish the Denpha App-servers Subnet
+#Network details to be suplied by client or you work it out
+#We reference the vpc by using the name of the vpc above, with upper case L
+- name: denpha-dr-app-server-sn
+  #description: "this subnet is for denpha app servers gce resource"
+  type: compute.v1.subnetwork
+  properties:
+    ipCidrRange: 10.140.0.0/20
+    network: $(ref.denpha-dr-vpc.selfLink)
+    region: us-central1
+
+#Resource 4: To establish the Denpha App-servers Subnet
+#Network details to be suplied by client or you work it out
+#We reference the vpc by using the name of the vpc above, with upper case L
+- name: denpha-dr-db-server-sn
+  #description: "this subnet is for denpha db servers gce resource"
+  type: compute.v1.subnetwork
+  properties:
+    ipCidrRange: 10.150.0.0/20
+    network: $(ref.denpha-dr-vpc.selfLink)
+    region: us-central1
+

@@ -1,0 +1,86 @@
+#====================================================================================#
+# This Template file provisions VPC and Subnet resources for Denpha prod environemt
+# Making template file more dynamic and re-usable with jinja2 variables
+# Taking out hard-coded values from Template files with jinja2 variable declarations
+#====================================================================================#
+
+# Resource 1 Varaibles: Prod VPC Network
+{% set  prod_vpc_name = "denpha-prod-vpc" %}
+{% set  prod_vpc_description = "This network is for the Denpha e-commerce application" %}
+{% set  prod_vpc_routingmode = "REGIONAL" %}
+{% set  prod_vpc_networkmode = "false" %}
+
+# Resource 2 Varaibles: Prod Webservers Subnet
+{% set  prod_webserver_sn_name = "denpha-prod-web-servers-sn" %}
+{% set  prod_webserver_sn_description = "This subnet is for the Denpha web-servers GCE" %}
+{% set  prod_webserver_sn_cidr = "10.130.0.0/20" %}
+{% set  prod_webserver_sn_network = "$(ref.denpha-prod-vpc.selfLink)" %}
+{% set  prod_webserver_sn_region = "us-central1" %}
+
+# Resource 3 Varaibles: Prod Appservers Subnet
+{% set  prod_appserver_sn_name = "denpha-prod-app-servers-sn" %}
+{% set  prod_appserver_sn_description = "This subnet is for the Denpha app-servers GCE" %}
+{% set  prod_appserver_sn_cidr = "10.140.0.0/20" %}
+{% set  prod_appserver_sn_network = "$(ref.denpha-prod-vpc.selfLink)" %}
+{% set  prod_appserver_sn_region = "us-central1" %}
+
+# Resource 4 Varaibles: Prod dbservers Subnet
+{% set  prod_dbserver_sn_name = "denpha-prod-db-servers-sn" %}
+{% set  prod_dbserver_sn_description = "This subnet is for the Denpha db-servers GCE" %}
+{% set  prod_dbserver_sn_cidr = "10.150.0.0/20" %}
+{% set  prod_dbserver_sn_network = "$(ref.denpha-prod-vpc.selfLink)" %}
+{% set  prod_dbserver_sn_region = "us-central1" %}
+
+#======================================================================#
+# Consuming the variables in all the resources 
+#======================================================================#
+#======================================================================#
+# Resource 1: Creating a VPC network for denpha infractructure
+#======================================================================#
+resources:
+- name: {{prod_vpc_name}}
+  type: compute.v1.network
+  properties:
+    description: {{prod_vpc_description}}
+    routingConfig:
+      routingMode: {{prod_vpc_routingmode}}
+    autoCreateSubnetworks: {{prod_vpc_networkmode}}
+
+#NOTES. resource dependency applies here as the subnet depends on the url or the vpc once created. $(ref) is how you declare a string when referencing resources.
+#Every resource has a selfLink (REST API) that represents the resource.
+
+#======================================================================#
+# Resource 2: Creating Denpha web-server Subnet
+#======================================================================#
+- name: {{prod_webserver_sn_name}}
+  type: compute.v1.subnetwork
+  properties:
+    description: {{prod_webserver_sn_description}}
+    ipCidrRange: {{prod_webserver_sn_cidr}}
+    network: {{prod_webserver_sn_network}}
+    region: {{prod_webserver_sn_region}}
+    labels: # UPDATED!!! Added Labels
+
+#======================================================================#
+# Resource 3: Creating Denpha app-server Subnet
+#======================================================================#
+- name: {{prod_appserver_sn_name}}
+  type: compute.v1.subnetwork
+  properties:
+    description: {{prod_appserver_sn_description}}
+    ipCidrRange: {{prod_appserver_sn_cidr}}
+    network: {{prod_appserver_sn_network}}
+    region: {{prod_appserver_sn_region}}
+    labels: # UPDATED!!! Added Labels
+
+ #======================================================================#
+ # Resource 4: Creating Denpha db-server Subnet
+ #======================================================================#
+- name: {{prod_dbserver_sn_name}}
+  type: compute.v1.subnetwork
+  properties:
+    description: {{prod_dbserver_sn_description}}
+    ipCidrRange: {{prod_dbserver_sn_cidr}}
+    network: {{prod_dbserver_sn_network}}
+    region: {{prod_dbserver_sn_region}} 
+    labels: # UPDATED!!! Added Labels

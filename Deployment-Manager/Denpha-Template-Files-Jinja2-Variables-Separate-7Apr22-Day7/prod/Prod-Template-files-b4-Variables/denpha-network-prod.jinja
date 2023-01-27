@@ -1,0 +1,44 @@
+######################### VPC CREATION ########################################
+#NOTES/single quotes can also be used for description/ you can set global or regional./autoCreate...false if to be customized/
+#Value for routingMode:must be in caps and represents the routing of the subnetworks.
+
+resources:
+# Resource 1: Denpha VPC Network
+- name: denpha-prod-vpc
+  type: compute.v1.network
+  properties:
+    description: "This network is for the Denpha e-commerce application"
+    routingConfig:
+      routingMode: REGIONAL
+    autoCreateSubnetworks: false
+
+######################### SUBNET CREATION ########################################
+#NOTES. resource dependency applies here as the subnet depends on the url or the vpc once created. $(ref) is how you declare a string when referencing resources.
+#Every resource has a selfLink (REST API) that represents the resource.
+
+# Resource 2: Denpha prod web-servers Subnet
+- name: denpha-prod-web-server-subnet
+  type: compute.v1.subnetwork
+  properties:
+    description: "This subnet is for the Denpha prod web-servers"
+    ipCidrRange: 10.130.0.0/20
+    network: $(ref.denpha-prod-vpc.selfLink)
+    region: us-central1
+
+# Resource 3: Denpha prod app-servers Subnet
+- name: denpha-prod-app-server-subnet
+  type: compute.v1.subnetwork
+  properties:
+    description: "This subnet is for the Denpha prod app-servers"
+    ipCidrRange: 10.140.0.0/20
+    network: $(ref.denpha-prod-vpc.selfLink)
+    region: us-central1
+
+ # Resource 4: Denpha prod db-servers Subnet
+- name: denpha-prod-db-server-subnet
+  type: compute.v1.subnetwork
+  properties:
+    description: "This subnet is for the Denpha prod db-servers"
+    ipCidrRange: 10.150.0.0/20
+    network: $(ref.denpha-prod-vpc.selfLink)
+    region: us-central1  

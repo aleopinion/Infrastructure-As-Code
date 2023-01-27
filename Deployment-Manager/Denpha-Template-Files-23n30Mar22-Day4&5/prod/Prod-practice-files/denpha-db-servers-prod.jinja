@@ -1,0 +1,73 @@
+# This Template file provisions the DB servers
+resources:
+# Resource 18: This is to create db-server resources for denpha-prod
+# db-server-1-resource-prod, us-central1-a
+- name: denpha-prod-db-server-1-az-a
+  type: compute.v1.instance
+  properties:
+    description: "This dbserver will be provisioned in us-central1-a AZ"
+    zone: us-central1-a
+    machineType: zones/us-central1-a/machineTypes/e2-medium
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: projects/centos-cloud/global/images/family/centos-7
+    networkInterfaces:
+    - subnetwork: $(ref.denpha-prod-db-server-subnet.selfLink)
+    tags:
+      items:
+      - pro-db-servers
+    labels: # UPDATED!!! Added Labels
+      application-id: cg468       
+      owner: operations-team       
+      environment: prod
+      budget-code: cg-denpha-prod
+      patch-group: pg-prod
+      compliance-classification: nist
+      data-classification: pii
+      lob: e-commerce
+      project-manager: alexander-dirus
+      project-name: denpha-project
+      region: us-central1
+
+# subnetwork: https://www.googleapis.com/compute/v1/projects/denpha-project/regions/us-central1/subnetworks/denpha-prod-web-servers-sn
+
+# Assignment is to create the instance in the db server us-central1-a&b
+
+# Resource 19: This is to create db-server resources for denpha-prod
+# db-server-2-resource-prod, us-central1-b
+- name: denpha-prod-db-server-2-az-b
+  type: compute.v1.instance
+  properties:
+    description: "This dbserver will be provisioned in us-central1-b AZ"
+    zone: us-central1-b
+    machineType: zones/us-central1-b/machineTypes/e2-medium
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: projects/centos-cloud/global/images/family/centos-7
+    networkInterfaces:
+    - subnetwork: $(ref.denpha-prod-db-server-subnet.selfLink)
+    tags:
+      items:
+      - pro-db-servers
+    labels: # UPDATED!!! Added Labels
+      application-id: cg468       
+      owner: operations-team       
+      environment: prod
+      budget-code: cg-denpha-prod
+      patch-group: pg-prod
+      compliance-classification: nist
+      data-classification: pii
+      lob: e-commerce
+      project-manager: alexander-dirus
+      project-name: denpha-project
+      region: us-central1
+
+

@@ -1,0 +1,7 @@
+gcloud deployment-manager deployments create my-deployment --config=config.yaml --description="My deployment"
+
+gcloud deployment-manager deployments create denpha-prod-vpc-subnets-deployment --config=denpha-prod-infrastructure.yaml --description="Denpha Production Network ENV"
+
+gcloud deployment-manager deployments create my-deployment --config=config.yaml --description="My deployment"
+
+gcloud deployment-manager deployments create denpha-prod-infrastructure-deployment --config=denpha-prod-infrastructure.yaml --description="Denpha Infrastructure Deployment ENV"

@@ -1,0 +1,195 @@
+# This Template file provisions web-app servers
+# Making template file more dynamic and re-usable with jinja2 variables
+# Taking out hard-coded values from Template files with jinja2 variable declarations
+
+# Resource 10 Variables: Prod Web Server-1 (az-a)
+{% set  prod_webserver1_az_a_name = "denpha-prod-web-server-1-az-a" %}
+{% set  prod_webserver1_az_a_description = "This webserver will be provisioned in us-central1-a AZ" %}
+{% set  prod_webserver1_az_a_zone = "us-central1-a" %}
+{% set  prod_webserver1_az_a_machine_type = "zones/us-central1-a/machineTypes/e2-medium" %}
+{% set  prod_webserver1_az_a_disk_auto_delete = "true" %}
+{% set  prod_webserver1_az_a_disk_source_image = "projects/centos-cloud/global/images/family/centos-7" %}
+{% set  prod_webserver1_az_a_subnetwork = "$(ref.denpha-prod-web-servers-sn.selfLink)" %}
+{% set  prod_webserver1_az_a_tags = "prod-web-servers" %}
+{% set  prod_webserver1_az_a_labels = "
+      application-id: cg468       
+      owner: operations-team       
+      environment: prod
+      budget-code: cg-denpha-prod
+      patch-group: pg-prod
+      compliance-classification: nist
+      data-classification: pii
+      lob: e-commerce
+      project-manager: alexander-dirus
+      project-name: denpha-project
+      region: us-central1" %}
+
+# Resource 11 Variables: Prod Web Server-2 (az-b)
+{% set  prod_webserver2_az_b_name = "denpha-prod-web-server-2-az-b" %}
+{% set  prod_webserver2_az_b_dscription = "This webserver will be provisioned in us-central1-b AZ" %}
+{% set  prod_webserver2_az_b_zone = "us-central1-b" %}
+{% set  prod_webserver2_az_b_machine_type = "zones/us-central1-b/machineTypes/e2-medium" %}
+{% set  prod_webserver2_az_b_disk_auto_delete = "true" %}
+{% set  prod_webserver2_az_b_disk_source_image = "projects/centos-cloud/global/images/family/centos-7" %}
+{% set  prod_webserver2_az_b_subnetwork = "$(ref.denpha-prod-web-servers-sn.selfLink)" %}
+{% set  prod_webserver2_az_b_tags = "prod-web-servers" %}
+{% set  prod_webserver2_az_b_labels = "
+      application-id: cg468       
+      owner: operations-team       
+      environment: prod
+      budget-code: cg-denpha-prod
+      patch-group: pg-prod
+      compliance-classification: nist
+      data-classification: pii
+      lob: e-commerce
+      project-manager: alexander-dirus
+      project-name: denpha-project
+      region: us-central1" %}
+
+# Resource 12 Variables: Prod App Server-1 (az-a)
+{% set  prod_appserver1_az_a_name = "denpha-prod-app-server-1-az-a" %}
+{% set  prod_appserver1_az_a_description = "This appserver will be provisioned in us-central1-a AZ" %}
+{% set  prod_appserver1_az_a_zone = "us-central1-a" %}
+{% set  prod_appserver1_az_a_machine_type = "zones/us-central1-a/machineTypes/e2-medium" %}
+{% set  prod_appserver1_az_a_disk_auto_delete = "true" %}
+{% set  prod_appserver1_az_a_disk_source_image = "projects/centos-cloud/global/images/family/centos-7" %}
+{% set  prod_appserver1_az_a_subnetwork = "$(ref.denpha-prod-app-servers-sn.selfLink)" %}
+{% set  prod_appserver1_az_a_tags = "prod-app-servers" %}
+{% set  prod_appserver1_az_a_labels = "
+      application-id: cg468       
+      owner: operations-team       
+      environment: prod
+      budget-code: cg-denpha-prod
+      patch-group: pg-prod
+      compliance-classification: nist
+      data-classification: pii
+      lob: e-commerce
+      project-manager: alexander-dirus
+      project-name: denpha-project
+      region: us-central1" %}
+
+# Resource 13 Variables: Prod App Server-2 (az-b)
+{% set  prod_appserver2_az_b_name = "denpha-prod-app-server-2-az-b" %}
+{% set  prod_appserver2_az_b_description = "This appserver will be provisioned in us-central1-b AZ" %}
+{% set  prod_appserver2_az_b_zone = "us-central1-b" %}
+{% set  prod_appserver2_az_b_machine_type = "zones/us-central1-b/machineTypes/e2-medium" %}
+{% set  prod_appserver2_az_b_disk_auto_delete = "true" %}
+{% set  prod_appserver2_az_b_disk_source_image = "projects/centos-cloud/global/images/family/centos-7" %}
+{% set  prod_appserver2_az_b_subnetwork = "$(ref.denpha-prod-app-servers-sn.selfLink)" %}
+{% set  prod_appserver2_az_b_tags = "prod-app-servers" %}
+{% set  prod_appserver2_az_b_labels = "
+      application-id: cg468       
+      owner: operations-team       
+      environment: prod
+      budget-code: cg-denpha-prod
+      patch-group: pg-prod
+      compliance-classification: nist
+      data-classification: pii
+      lob: e-commerce
+      project-manager: alexander-dirus
+      project-name: denpha-project
+      region: us-central1" %}
+
+#======================================================================#
+# Resource 10: This is to create web-server resources for denpha-prod
+#======================================================================#
+# web-server-1-resource-prod, us-central1-a
+#======================================================================#
+resources:
+- name: {{prod_webserver1_az_a_name}}
+  type: compute.v1.instance
+  properties:
+    description: {{prod_webserver1_az_a_description}}
+    zone: {{prod_webserver1_az_a_zone}}
+    machineType: {{prod_webserver1_az_a_machine_type}}
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: {{prod_webserver1_az_a_disk_auto_delete}}
+      initializeParams:
+        sourceImage: {{prod_webserver1_az_a_disk_source_image}}
+    networkInterfaces:
+    - subnetwork: {{prod_webserver1_az_a_subnetwork}}
+    tags:
+      items:
+      - {{prod_webserver1_az_a_tags}}
+    labels: {{prod_webserver1_az_a_labels}}
+
+#======================================================================#
+# Resource 11: This is to create web-server resources for denpha-prod
+#======================================================================#
+# web-server-1-resource-prod, us-central1-b
+#======================================================================#
+- name: {{prod_webserver2_az_b_name}}
+  type: compute.v1.instance
+  properties:
+    description: {{prod_webserver2_az_b_dscription}}
+    zone: {{prod_webserver2_az_b_zone}}
+    machineType: {{prod_webserver2_az_b_machine_type}}
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: {{prod_webserver2_az_b_disk_auto_delete}}
+      initializeParams:
+        sourceImage: {{prod_webserver2_az_b_disk_source_image}}
+    networkInterfaces:
+    - subnetwork: {{prod_webserver2_az_b_subnetwork}}
+    tags:
+      items:
+      - {{prod_webserver2_az_b_tags}}
+    labels: {{prod_webserver2_az_b_labels}}
+
+#======================================================================#
+# Resource 12: This is to create app-server resources for denpha-prod
+#======================================================================#
+# app-server-1-resource-prod, us-central1-a
+#======================================================================#
+- name: {{prod_appserver1_az_a_name}}
+  type: compute.v1.instance
+  properties:
+    description: {{prod_appserver1_az_a_description}}
+    zone: {{prod_appserver1_az_a_zone}}
+    machineType: {{prod_appserver1_az_a_machine_type}}
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: {{prod_appserver1_az_a_disk_auto_delete}}
+      initializeParams:
+        sourceImage: {{prod_appserver1_az_a_disk_source_image}}
+    networkInterfaces:
+    - subnetwork: {{prod_appserver1_az_a_subnetwork}}
+    tags:
+      items:
+      - {{prod_appserver1_az_a_tags}}
+    labels: {{prod_appserver1_az_a_labels}}
+
+#======================================================================#
+# Resource 13: This is to create app-server resources for denpha-prod
+#======================================================================#
+# app-server-2-resource-prod, us-central1-b
+#======================================================================#
+- name: {{prod_appserver2_az_b_name}}
+  type: compute.v1.instance
+  properties:
+    description: {{prod_appserver2_az_b_description}}
+    zone: {{prod_appserver2_az_b_zone}}
+    machineType: {{prod_appserver2_az_b_machine_type}}
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: {{prod_appserver2_az_b_disk_auto_delete}}
+      initializeParams:
+        sourceImage: {{prod_appserver2_az_b_disk_source_image}}
+    networkInterfaces:
+    - subnetwork: {{prod_appserver2_az_b_subnetwork}}
+    tags:
+      items:
+      - {{prod_appserver2_az_b_tags}}
+    labels: {{prod_appserver2_az_b_labels}}
+
+
+

@@ -1,0 +1,230 @@
+#====================================================================================#
+# This Template file provisions VPC and Subnet resources for Denpha prod environemt
+# Making template file more dynamic and re-usable with jinja2 variables
+# Taking out hard-coded values from Template files with jinja2 variable declarations
+#====================================================================================#
+
+# Resource 1 Varaibles: Prod VPC Network
+{% set  prod_vpc_name = "denpha-prod-vpc" %}
+{% set  prod_vpc_description = "This network is for the Denpha e-commerce application" %}
+{% set  prod_vpc_routingmode = "REGIONAL" %}
+{% set  prod_vpc_networkmode = "false" %}
+
+# Resource 2 Varaibles: Prod Webservers Subnet
+{% set  prod_webserver_sn_name = "denpha-prod-web-servers-sn" %}
+{% set  prod_webserver_sn_description = "This subnet is for the Denpha web-servers GCE" %}
+{% set  prod_webserver_sn_cidr = "10.130.0.0/20" %}
+{% set  prod_webserver_sn_network = "$(ref.denpha-prod-vpc.selfLink)" %}
+{% set  prod_webserver_sn_region = "us-central1" %}
+
+# Resource 3 Varaibles: Prod Appservers Subnet
+{% set  prod_appserver_sn_name = "denpha-prod-app-servers-sn" %}
+{% set  prod_appserver_sn_description = "This subnet is for the Denpha app-servers GCE" %}
+{% set  prod_appserver_sn_cidr = "10.140.0.0/20" %}
+{% set  prod_appserver_sn_network = "$(ref.denpha-prod-vpc.selfLink)" %}
+{% set  prod_appserver_sn_region = "us-central1" %}
+
+# Resource 4 Varaibles: Prod dbservers Subnet
+{% set  prod_dbserver_sn_name = "denpha-prod-db-servers-sn" %}
+{% set  prod_dbserver_sn_description = "This subnet is for the Denpha db-servers GCE" %}
+{% set  prod_dbserver_sn_cidr = "10.150.0.0/20" %}
+{% set  prod_dbserver_sn_network = "$(ref.denpha-prod-vpc.selfLink)" %}
+{% set  prod_dbserver_sn_region = "us-central1" %}
+
+
+
+#======================================================================================#
+# This Template file provisions the Firewall Rules
+# Making template file more dynamic and re-usable with jinja2 variables
+# Taking out hard-coded values from Template files with jinja2 variable declarations
+#=======================================================================================#
+
+# Resource 5 Varaibles: Prod Webservers Firewall Rule
+{% set  prod_webserver_fr_name = "denpha-prod-web-servers-fr-allow-http-https" %}
+{% set  prod_webserver_fr_description = "This firewall rule grants http/https access from the Prod External LoadBalancer" %}
+{% set  prod_webserver_vpc_fr_network = "$(ref.denpha-prod-vpc.selfLink)" %}
+{% set  prod_webserver_fr_source_ranges = ["0.0.0.0/0"] %}
+{% set  prod_webserver_fr_target_tags = ["prod-web-servers"] %}
+{% set  prod_webserver_fr_allowed_ports = ["80", "443"] %}
+
+# Resource 6 Varaibles: Prod Appservers Firewall Rule
+{% set  prod_appserver_fr_name = "denpha-prod-app-servers-fr-allow-http-https" %}
+{% set  prod_appserver_fr_description = "This firewall rule grants http/https access from the Prod App LoadBalancer" %}
+{% set  prod_appserver_vpc_fr_network = "$(ref.denpha-prod-vpc.selfLink)" %}
+{% set  prod_appserver_fr_source_ranges = ["10.130.0.0/20"] %}
+{% set  prod_appserver_fr_target_tags = ["prod-app-servers"] %}
+{% set  prod_appserver_fr_allowed_ports = ["80", "443"] %}
+
+# Resource 7 Varaibles: Prod dbservers Firewall Rule
+{% set  prod_dbserver_fr_name = "denpha-prod-db-servers-fr-allow-mysql" %}
+{% set  prod_dbserver_fr_description = "This firewall rule grants mysql access from the Prod db-server network" %}
+{% set  prod_dbserver_vpc_fr_network = "$(ref.denpha-prod-vpc.selfLink)" %}
+{% set  prod_dbserver_fr_source_ranges = ["10.140.0.0/20"] %}
+{% set  prod_dbserver_fr_target_tags = ["prod-db-servers"] %}
+{% set  prod_dbserver_fr_allowed_ports = ["3306"] %}
+
+
+
+
+# This Template file provisions the startic External (Global) and Iternal (Regional) IPs 
+# Making template file more dynamic and re-usable with jinja2 variables
+# Taking out hard-coded values from Template files with jinja2 variable declarations
+
+# Resource 8 Variables: Creates a Static IP for External HTTP/HTTPS Load Balancer
+{% set  prod_external_lb_ip_name = "denpha-prod-external-load-balancer-ip" %}
+{% set  prod_external_lb_ip_description = "This static external IP will be reserved for the Prod External LoadBalancer" %}
+{% set  prod_external_lb_ip_networkTier = "PREMIUM" %}
+{% set  prod_external_lb_ip_addressType = "EXTERNAL" %}
+
+# Resource 9 Variables: Reserve a Static internal IP for HTTP/HTTPS LoadBalancer
+{% set  prod_internal_lb_ip_name = "denpha-prob-internal-load-balancer-ip" %}
+{% set  prod_internal_lb_ip_description = "This static internal IP will be reserved for the Prod Internal LoadBalancer" %}
+{% set  prod_internal_lb_ip_addressType = "INTERNAL" %}
+{% set  prod_internal_lb_ip_region = "us-central1" %}
+{% set  prod_internal_lb_ip_subnetwork = "$(ref.denpha-prod-web-servers-sn.selfLink)" %}
+{% set  prod_internal_ip_address = "10.130.0.10" %}
+
+
+
+# This Template file provisions web-app servers
+# Making template file more dynamic and re-usable with jinja2 variables
+# Taking out hard-coded values from Template files with jinja2 variable declarations
+
+# Resource 10 Variables: Prod Web Server-1 (az-a)
+{% set  prod_webserver1_az_a_name = "denpha-prod-web-server-1-az-a" %}
+{% set  prod_webserver1_az_a_description = "This webserver will be provisioned in us-central1-a AZ" %}
+{% set  prod_webserver1_az_a_zone = "us-central1-a" %}
+{% set  prod_webserver1_az_a_machine_type = "zones/us-central1-a/machineTypes/e2-medium" %}
+{% set  prod_webserver1_az_a_disk_auto_delete = "true" %}
+{% set  prod_webserver1_az_a_disk_source_image = "projects/centos-cloud/global/images/family/centos-7" %}
+{% set  prod_webserver1_az_a_subnetwork = "$(ref.denpha-prod-web-servers-sn.selfLink)" %}
+{% set  prod_webserver1_az_a_tags = "prod-web-servers" %}
+{% set  prod_webserver1_az_a_labels = "
+      application-id: cg468       
+      owner: operations-team       
+      environment: prod
+      budget-code: cg-denpha-prod
+      patch-group: pg-prod
+      compliance-classification: nist
+      data-classification: pii
+      lob: e-commerce
+      project-manager: alexander-dirus
+      project-name: denpha-project
+      region: us-central1" %}
+
+# Resource 11 Variables: Prod Web Server-2 (az-b)
+{% set  prod_webserver2_az_b_name = "denpha-prod-web-server-2-az-b" %}
+{% set  prod_webserver2_az_b_description = "This webserver will be provisioned in us-central1-b AZ" %}
+{% set  prod_webserver2_az_b_zone = "us-central1-b" %}
+{% set  prod_webserver2_az_b_machine_type = "zones/us-central1-b/machineTypes/e2-medium" %}
+{% set  prod_webserver2_az_b_disk_auto_delete = "true" %}
+{% set  prod_webserver2_az_b_disk_source_image = "projects/centos-cloud/global/images/family/centos-7" %}
+{% set  prod_webserver2_az_b_subnetwork = "$(ref.denpha-prod-web-servers-sn.selfLink)" %}
+{% set  prod_webserver2_az_b_tags = "prod-web-servers" %}
+{% set  prod_webserver2_az_b_labels = "
+      application-id: cg468       
+      owner: operations-team       
+      environment: prod
+      budget-code: cg-denpha-prod
+      patch-group: pg-prod
+      compliance-classification: nist
+      data-classification: pii
+      lob: e-commerce
+      project-manager: alexander-dirus
+      project-name: denpha-project
+      region: us-central1" %}
+
+# Resource 12 Variables: Prod App Server-1 (az-a)
+{% set  prod_appserver1_az_a_name = "denpha-prod-app-server-1-az-a" %}
+{% set  prod_appserver1_az_a_description = "This appserver will be provisioned in us-central1-a AZ" %}
+{% set  prod_appserver1_az_a_zone = "us-central1-a" %}
+{% set  prod_appserver1_az_a_machine_type = "zones/us-central1-a/machineTypes/e2-medium" %}
+{% set  prod_appserver1_az_a_disk_auto_delete = "true" %}
+{% set  prod_appserver1_az_a_disk_source_image = "projects/centos-cloud/global/images/family/centos-7" %}
+{% set  prod_appserver1_az_a_subnetwork = "$(ref.denpha-prod-app-servers-sn.selfLink)" %}
+{% set  prod_appserver1_az_a_tags = "prod-app-servers" %}
+{% set  prod_appserver1_az_a_labels = "
+      application-id: cg468       
+      owner: operations-team       
+      environment: prod
+      budget-code: cg-denpha-prod
+      patch-group: pg-prod
+      compliance-classification: nist
+      data-classification: pii
+      lob: e-commerce
+      project-manager: alexander-dirus
+      project-name: denpha-project
+      region: us-central1" %}
+
+# Resource 13 Variables: Prod App Server-2 (az-b)
+{% set  prod_appserver2_az_b_name = "denpha-prod-app-server-2-az-b" %}
+{% set  prod_appserver2_az_b_description = "This appserver will be provisioned in us-central1-b AZ" %}
+{% set  prod_appserver2_az_b_zone = "us-central1-b" %}
+{% set  prod_appserver2_az_b_machine_type = "zones/us-central1-b/machineTypes/e2-medium" %}
+{% set  prod_appserver2_az_b_disk_auto_delete = "true" %}
+{% set  prod_appserver2_az_b_disk_source_image = "projects/centos-cloud/global/images/family/centos-7" %}
+{% set  prod_appserver2_az_b_subnetwork = "$(ref.denpha-prod-app-servers-sn.selfLink)" %}
+{% set  prod_appserver2_az_b_tags = "prod-app-servers" %}
+{% set  prod_appserver2_az_b_labels = "
+      application-id: cg468       
+      owner: operations-team       
+      environment: prod
+      budget-code: cg-denpha-prod
+      patch-group: pg-prod
+      compliance-classification: nist
+      data-classification: pii
+      lob: e-commerce
+      project-manager: alexander-dirus
+      project-name: denpha-project
+      region: us-central1" %}
+
+
+
+# This Template file provisions the DB servers
+# Making template file more dynamic and re-usable with jinja2 variables
+# Taking out hard-coded values from Template files with jinja2 variable declarations
+
+# Resource 14 Variables: Prod Web Server-1 (az-a)
+{% set  prod_dbserver1_az_a_name = "denpha-prod-db-server-1-az-a" %}
+{% set  prod_dbserver1_az_a_description = "This dbserver will be provisioned in us-central1-a AZ" %}
+{% set  prod_dbserver1_az_a_zone = "us-central1-a" %}
+{% set  prod_dbserver1_az_a_machine_type = "zones/us-central1-a/machineTypes/e2-medium" %}
+{% set  prod_dbserver1_az_a_disk_auto_delete = "true" %}
+{% set  prod_dbserver1_az_a_disk_source_image = "projects/centos-cloud/global/images/family/centos-7" %}
+{% set  prod_dbserver1_az_a_subnetwork = "$(ref.denpha-prod-db-servers-sn.selfLink)" %}
+{% set  prod_dbserver1_az_a_tags = "prod-db-servers" %}
+{% set  prod_dbserver1_az_a_labels = "
+      application-id: cg468       
+      owner: operations-team       
+      environment: prod
+      budget-code: cg-denpha-prod
+      patch-group: pg-prod
+      compliance-classification: nist
+      data-classification: pii
+      lob: e-commerce
+      project-manager: alexander-dirus
+      project-name: denpha-project
+      region: us-central1" %}
+
+# Resource 15 Variables: Prod db Server-2 (az-b)
+{% set  prod_dbserver2_az_b_name = "denpha-prod-db-server-2-az-b" %}
+{% set  prod_dbserver2_az_b_description = "This dbserver will be provisioned in us-central1-b AZ" %}
+{% set  prod_dbserver2_az_b_zone = "us-central1-b" %}
+{% set  prod_dbserver2_az_b_machine_type = "zones/us-central1-b/machineTypes/e2-medium" %}
+{% set  prod_dbserver2_az_b_disk_auto_delete = "true" %}
+{% set  prod_dbserver2_az_b_disk_source_image = "projects/centos-cloud/global/images/family/centos-7" %}
+{% set  prod_dbserver2_az_b_subnetwork = "$(ref.denpha-prod-db-servers-sn.selfLink)" %}
+{% set  prod_dbserver2_az_b_tags = "prod-db-servers" %}
+{% set  prod_dbserver2_az_b_labels = "
+    labels: # UPDATED!!! Added Labels
+      application-id: cg468       
+      owner: operations-team       
+      environment: prod
+      budget-code: cg-denpha-prod
+      patch-group: pg-prod
+      compliance-classification: nist
+      data-classification: pii
+      lob: e-commerce
+      project-manager: alexander-dirus
+      project-name: denpha-project
+      region: us-central1" %}    

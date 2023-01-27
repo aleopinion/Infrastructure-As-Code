@@ -1,0 +1,105 @@
+# This Template file provisions the DB servers
+# Making template file more dynamic and re-usable with jinja2 variables
+# Taking out hard-coded values from Template files with jinja2 variable declarations
+
+# Resource 12 Variables: Prod Web Server-1 (az-a)
+{% set  prod_dbserver1_az_a_name = "denpha-prod-db-server-1-az-a" %}
+{% set  prod_dbserver1_az_a_description = "This dbserver will be provisioned in us-central1-a AZ" %}
+{% set  prod_dbserver1_az_a_zone = "us-central1-a" %}
+{% set  prod_dbserver1_az_a_machine_type = "zones/us-central1-a/machineTypes/e2-medium" %}
+{% set  prod_dbserver1_az_a_disk_auto_delete = "true" %}
+{% set  prod_dbserver1_az_a_disk_source_image = "projects/centos-cloud/global/images/family/centos-7" %}
+{% set  prod_dbserver1_az_a_subnetwork = "$(ref.denpha-prod-db-servers-sn.selfLink)" %}
+{% set  prod_dbserver1_az_a_tags = "prod-db-servers" %}
+{% set  prod_dbserver1_az_a_labels = "
+      application-id: cg468       
+      owner: operations-team       
+      environment: prod
+      budget-code: cg-denpha-prod
+      patch-group: pg-prod
+      compliance-classification: nist
+      data-classification: pii
+      lob: e-commerce
+      project-manager: alexander-dirus
+      project-name: denpha-project
+      region: us-central1" %}
+
+
+# Resource 13 Variables: Prod Web Server-2 (az-b)
+{% set  prod_dbserver2_az_b_name = "denpha-prod-db-server-2-az-b" %}
+{% set  prod_dbserver2_az_b_description = "This dbserver will be provisioned in us-central1-b AZ" %}
+{% set  prod_dbserver2_az_b_zone = "us-central1-b" %}
+{% set  prod_dbserver2_az_b_machine_type = "zones/us-central1-b/machineTypes/e2-medium" %}
+{% set  prod_dbserver2_az_b_disk_auto_delete = "true" %}
+{% set  prod_dbserver2_az_b_disk_source_image = "projects/centos-cloud/global/images/family/centos-7" %}
+{% set  prod_dbserver2_az_b_subnetwork = "$(ref.denpha-prod-db-servers-sn.selfLink)" %}
+{% set  prod_dbserver2_az_b_tags = "prod-db-servers" %}
+{% set  prod_dbserver2_az_b_labels = "
+    labels: # UPDATED!!! Added Labels
+      application-id: cg468       
+      owner: operations-team       
+      environment: prod
+      budget-code: cg-denpha-prod
+      patch-group: pg-prod
+      compliance-classification: nist
+      data-classification: pii
+      lob: e-commerce
+      project-manager: alexander-dirus
+      project-name: denpha-project
+      region: us-central1" %}
+
+#======================================================================#
+# Consuming the variables in all the resources 
+#======================================================================#
+
+#======================================================================#
+# Resource 12: This is to create db-server resources for denpha-prod
+#======================================================================#
+# db-server-1-resource-prod, us-central1-a
+#======================================================================#
+resources:
+- name: {{prod_dbserver1_az_a_name}}
+  type: compute.v1.instance
+  properties:
+    description: {{prod_dbserver1_az_a_description}}
+    zone: {{prod_dbserver1_az_a_zone}}
+    machineType: {{prod_dbserver1_az_a_machine_type}}
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: {{prod_dbserver1_az_a_disk_auto_delete}}
+      initializeParams:
+        sourceImage: {{prod_dbserver1_az_a_disk_source_image}}
+    networkInterfaces:
+    - subnetwork: {{prod_dbserver1_az_a_subnetwork}}
+    tags:
+      items:
+      - {{prod_dbserver1_az_a_tags}}
+    labels: {{prod_dbserver1_az_a_labels}}
+
+#======================================================================#
+# Resource 13: This is to create db-server resources for denpha-prod
+#======================================================================#
+# db-server-2-resource-prod, us-central1-b
+#======================================================================#
+- name: {{prod_dbserver2_az_b_name}}
+  type: compute.v1.instance
+  properties:
+    description: {{prod_dbserver2_az_b_description}}
+    zone: {{prod_dbserver2_az_b_zone}}
+    machineType: {{prod_dbserver2_az_b_machine_type}}
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: {{prod_dbserver2_az_b_disk_auto_delete}}
+      initializeParams:
+        sourceImage: {{prod_dbserver2_az_b_disk_source_image}}
+    networkInterfaces:
+    - subnetwork: {{prod_dbserver2_az_b_subnetwork}}
+    tags:
+      items:
+      - {{prod_dbserver2_az_b_tags}}
+    labels: {{prod_dbserver2_az_b_labels}}
+

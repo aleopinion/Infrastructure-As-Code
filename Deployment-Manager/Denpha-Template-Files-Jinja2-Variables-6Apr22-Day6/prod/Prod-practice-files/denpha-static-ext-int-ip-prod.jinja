@@ -1,0 +1,48 @@
+# This Template file provisions the startic External (Global) and Iternal (Regional) IPs 
+# Making template file more dynamic and re-usable with jinja2 variables
+# Taking out hard-coded values from Template files with jinja2 variable declarations
+
+# Resource 8 Variables: CREATE AN EXTERNAL STATIC LOAD BALANCER
+{% set  prod_external_lb_ip_name = "denpha-prod-external-load-balancer-ip" %}
+{% set  prod_external_lb_ip_description = "This static external IP will be reserved for the Prod External LoadBalancer" %}
+{% set  prod_external_lb_ip_networkTier = "PREMIUM" %}
+{% set  prod_external_lb_ip_addressType = "EXTERNAL" %}
+
+# Resource 9 Variables: Reserve a Static internal IP for HTTP/HTTPS LoadBalancer
+{% set  prod_internal_lb_ip_name = "denpha-prob-internal-load-balancer-ip" %}
+{% set  prod_internal_lb_ip_description = "This static internal IP will be reserved for the Prod Internal LoadBalancer" %}
+{% set  prod_internal_lb_ip_addressType = "INTERNAL" %}
+{% set  prod_internal_lb_ip_region = "us-central1" %}
+{% set  prod_internal_lb_ip_subnetwork = "$(ref.denpha-prod-web-servers-sn.selfLink)" %}
+{% set  prod_internal_ip_address = "10.130.0.10" %}
+
+#======================================================================#
+# CREATE AN EXTERNAL STATIC LOAD BALANCER
+#======================================================================#
+# Resource 8 Variable: "Creating a External (Public) Static IP"
+# Reserve a Static External/Public IP for HTTP/HTTPS LoadBalancer. To mininize your costs, you could go with Standard networkTier
+# Make sure the resource type name should be >>>>>compute.v1.globalAddress<<<<<<
+#======================================================================#
+resources:
+- name: {{prod_external_lb_ip_name}}
+  type: compute.v1.globalAddress
+  properties: 
+    description: {{prod_external_lb_ip_description}}
+    networkTier: {{prod_external_lb_ip_networkTier}}
+    addressType: {{prod_external_lb_ip_addressType}}
+    ipVersion: IPV4
+
+#======================================================================#
+# Resource 9 Variables: This resource provisions static internal IP for Internal Load Balancer
+#======================================================================#
+# Reserve a Static internal IP for HTTP/HTTPS LoadBalancer
+#======================================================================#
+- name: {{prod_internal_lb_ip_name}}
+  type: compute.v1.address
+  properties: 
+    description: {{prod_internal_lb_ip_description}}
+    addressType: {{prod_internal_lb_ip_addressType}}
+    region: {{prod_internal_lb_ip_region}}
+    #subnetwork: https://www.googleapis.com/compute/v1/projects/mbandianyere-dev/regions/us-central1/subnetworks/denpha-prod-web-servers-sn
+    subnetwork: {{prod_internal_lb_ip_subnetwork}}
+    address: {{prod_internal_ip_address}}

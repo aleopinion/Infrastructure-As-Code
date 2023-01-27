@@ -1,0 +1,103 @@
+#======================================================================#
+# Resource 10: This is to create web-server resources for denpha-prod
+#======================================================================#
+# web-server-1-resource-prod, us-central1-a
+#======================================================================#
+resources:
+- name: {{prod_webserver1_az_a_name}}
+  type: compute.v1.instance
+  properties:
+    description: {{prod_webserver1_az_a_description}}
+    zone: {{prod_webserver1_az_a_zone}}
+    machineType: {{prod_webserver1_az_a_machine_type}}
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: {{prod_webserver1_az_a_disk_auto_delete}}
+      initializeParams:
+        sourceImage: {{prod_webserver1_az_a_disk_source_image}}
+    networkInterfaces:
+    - subnetwork: {{prod_webserver1_az_a_subnetwork}}
+    tags:
+      items:
+      - {{prod_webserver1_az_a_tags}}
+    labels: {{prod_webserver1_az_a_labels}}
+
+#======================================================================#
+# Resource 11: This is to create web-server resources for denpha-prod
+#======================================================================#
+# web-server-1-resource-prod, us-central1-b
+#======================================================================#
+- name: {{prod_webserver2_az_b_name}}
+  type: compute.v1.instance
+  properties:
+    description: {{prod_webserver2_az_b_description}}
+    zone: {{prod_webserver2_az_b_zone}}
+    machineType: {{prod_webserver2_az_b_machine_type}}
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: {{prod_webserver2_az_b_disk_auto_delete}}
+      initializeParams:
+        sourceImage: {{prod_webserver2_az_b_disk_source_image}}
+    networkInterfaces:
+    - subnetwork: {{prod_webserver2_az_b_subnetwork}}
+    tags:
+      items:
+      - {{prod_webserver2_az_b_tags}}
+    labels: {{prod_webserver2_az_b_labels}}
+
+#======================================================================#
+# Resource 12: This is to create app-server resources for denpha-prod
+#======================================================================#
+# app-server-1-resource-prod, us-central1-a
+#======================================================================#
+- name: {{prod_appserver1_az_a_name}}
+  type: compute.v1.instance
+  properties:
+    description: {{prod_appserver1_az_a_description}}
+    zone: {{prod_appserver1_az_a_zone}}
+    machineType: {{prod_appserver1_az_a_machine_type}}
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: {{prod_appserver1_az_a_disk_auto_delete}}
+      initializeParams:
+        sourceImage: {{prod_appserver1_az_a_disk_source_image}}
+    networkInterfaces:
+    - subnetwork: {{prod_appserver1_az_a_subnetwork}}
+    tags:
+      items:
+      - {{prod_appserver1_az_a_tags}}
+    labels: {{prod_appserver1_az_a_labels}}
+
+#======================================================================#
+# Resource 13: This is to create app-server resources for denpha-prod
+#======================================================================#
+# app-server-2-resource-prod, us-central1-b
+#======================================================================#
+- name: {{prod_appserver2_az_b_name}}
+  type: compute.v1.instance
+  properties:
+    description: {{prod_appserver2_az_b_description}}
+    zone: {{prod_appserver2_az_b_zone}}
+    machineType: {{prod_appserver2_az_b_machine_type}}
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: {{prod_appserver2_az_b_disk_auto_delete}}
+      initializeParams:
+        sourceImage: {{prod_appserver2_az_b_disk_source_image}}
+    networkInterfaces:
+    - subnetwork: {{prod_appserver2_az_b_subnetwork}}
+    tags:
+      items:
+      - {{prod_appserver2_az_b_tags}}
+    labels: {{prod_appserver2_az_b_labels}}
+
+
+

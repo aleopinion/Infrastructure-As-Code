@@ -1,0 +1,11 @@
+#This configuration resource decalaration file is provisions an auto mode VPC
+resources:
+- name: auto-vpc
+  type: compute.v1.network
+  properties:
+    routingConfig:
+      routingMode: REGIONAL
+    autoCreateSubnetworks: true
+
+#Command line for deploying a a VPC as IaC => Commented
+#gcloud deployment-manager deployments create my-deployment --config=config.yaml --description="My deployment"

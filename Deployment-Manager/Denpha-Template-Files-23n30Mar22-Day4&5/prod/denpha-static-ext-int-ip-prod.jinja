@@ -1,0 +1,26 @@
+# This Template file provisions the startic External (Global) and Iternal (Regional) IPs 
+resources:
+#CREATE AN EXTERNAL STATIC LOAD BALANCER
+# Resource 8: This resource provisions an External (Public) Static IP"
+# Reserve a Static External/Public IP for HTTP/HTTPS LoadBalancer. To mininize your costs, you could go with Standard networkTier instead of Premium Tier
+# Make sure the <RESOURCE TYPE NAME> should be >>>>>compute.v1.globalAddress<<<<<<
+- name: denpha-prod-external-load-balancer-ip
+  type: compute.v1.globalAddress
+  properties: 
+    description: "This static external IP will be reserved for the Prod External LoadBalancer"
+    networkTier: PREMIUM # => PREMIUM => You are taking advantage of google internal backbone network with their PoP => with the Premium option
+    addressType: EXTERNAL #The type of address to reserve, either INTERNAL or EXTERNAL. If unspecified, defaults to EXTERNAL
+    ipVersion: IPV4
+
+# Resource 9: This resource provisions a static internal IP for Internal Load Balancer
+# Reserve a Static internal IP for HTTP/HTTPS LoadBalancer
+- name: denpha-prob-internal-load-balancer-ip
+  type: compute.v1.address
+  properties: 
+    description: "This static internal IP will be reserved for the Prod Internal LoadBalancer"
+    addressType: INTERNAL #The type of address to reserve, either INTERNAL or EXTERNAL. If unspecified, defaults to EXTERNAL
+    region: us-central1
+    #subnetwork: https://www.googleapis.com/compute/v1/projects/mbandianyere-dev/regions/us-central1/subnetworks/denpha-prod-web-servers-sn
+    subnetwork: $(ref.denpha-prod-web-server-subnet.selfLink)
+    address: "10.130.0.5" #Taken from the IP range of the webserver network
+

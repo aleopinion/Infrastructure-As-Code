@@ -1,0 +1,58 @@
+#======================================================================#
+# Consuming the variables in all the resources
+#======================================================================#
+
+resources:
+#======================================================================#
+# Resource 5: This creates a firewall rule for Prod Web Servers
+#======================================================================#
+# Web servers firewall rule HTTP/80 and HTTPS/443
+#======================================================================#
+- name: {{prod_webserver_fr_name}}
+  type: compute.v1.firewall
+  properties:
+    description: {{prod_webserver_fr_description}}
+    network: {{prod_webserver_vpc_fr_network}}
+    #sourceRanges: ["$(ref.external-load-balancer-ip-prod.selfLink)"] 
+    #Keeping the webservers Private but granting public access
+    sourceRanges: {{prod_webserver_fr_source_ranges}}
+    targetTags: {{prod_webserver_fr_target_tags}}
+    allowed:
+    - IPProtocol: TCP
+      ports: {{prod_webserver_fr_allowed_ports}}
+
+#======================================================================#
+# Resource 6: This creates a firewall rule for Prod App Servers
+#======================================================================#
+# App servers firewall rule HTTP/80 and HTTPS/443 Network Access
+#======================================================================#
+- name: {{prod_appserver_fr_name}}
+  type: compute.v1.firewall
+  properties:
+    description: {{prod_appserver_fr_description}}
+    network: {{prod_appserver_vpc_fr_network}}
+    #sourceRanges: ["$(ref.external-load-balancer-ip-prod.selfLink)/32"]
+    sourceRanges: {{prod_appserver_fr_source_ranges}} # For now but will be updated to Bastion host before use
+    targetTags: {{prod_appserver_fr_target_tags}}
+    allowed:
+    - IPProtocol: TCP
+      ports: {{prod_appserver_fr_allowed_ports}}
+
+#======================================================================#
+# Resource 7: This creates a firewall rule for Prod DB Servers
+#======================================================================#
+# DB servers firewall rule MYSQL/3306  Network Access
+#======================================================================#
+- name: {{prod_dbserver_fr_name}}
+  type: compute.v1.firewall
+  properties:
+    description: {{prod_dbserver_fr_description}}
+    network: {{prod_dbserver_vpc_fr_network}}
+    #sourceRanges: ["$(ref.external-load-balancer-ip-prod.selfLink)/32"]
+    #For now but will be updated to Bastion host before use.
+    sourceRanges: {{prod_dbserver_fr_source_ranges}} 
+    targetTags: {{prod_dbserver_fr_target_tags}}
+    allowed:
+    - IPProtocol: TCP
+      ports: {{prod_dbserver_fr_allowed_ports}}   
+    

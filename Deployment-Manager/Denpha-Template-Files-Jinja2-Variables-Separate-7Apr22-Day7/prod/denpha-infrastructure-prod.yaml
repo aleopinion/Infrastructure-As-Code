@@ -1,0 +1,30 @@
+# This configuration file ochestrate the deployment of denpha infrastructure
+
+imports:
+- path: denpha-firewall-rules-prod.jinja
+- path: denpha-network-prod.jinja
+- path: denpha-static-ext-int-ip-prod.jinja
+- path: denpha-web-app-servers-prod.jinja
+- path: denpha-db-servers-prod.jinja
+- path: denpha-infrastruture-prod-variables-values.jinja # Denpha jinja2 variable file
+
+resources:
+# Denpha Firewall rule Resources
+- name: denpha-firewall-rules-prod
+  type: denpha-firewall-rules-prod.jinja
+
+# Denpha Network Resources
+- name: denpha-network-prod
+  type: denpha-network-prod.jinja
+
+# Denpha internal and external IP Resources
+- name: denpha-static-ext-int-ip-prod
+  type: denpha-static-ext-int-ip-prod.jinja
+
+# Denpha web and app Resources
+- name: denpha-web-app-servers-prod
+  type: denpha-web-app-servers-prod.jinja
+
+# Denpha db server Resources
+- name: denpha-db-servers-prod
+  type: denpha-db-servers-prod.jinja

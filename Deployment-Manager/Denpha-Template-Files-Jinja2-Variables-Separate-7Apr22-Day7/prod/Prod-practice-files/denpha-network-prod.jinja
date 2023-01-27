@@ -1,0 +1,53 @@
+#======================================================================#
+# Consuming the variables in all the resources 
+#======================================================================#
+#======================================================================#
+# Resource 1: Creating a VPC network for denpha infractructure
+#======================================================================#
+resources:
+- name: {{prod_vpc_name}}
+  type: compute.v1.network
+  properties:
+    description: {{prod_vpc_description}}
+    routingConfig:
+      routingMode: {{prod_vpc_routingmode}}
+    autoCreateSubnetworks: {{prod_vpc_networkmode}}
+
+#NOTES. resource dependency applies here as the subnet depends on the url or the vpc once created. $(ref) is how you declare a string when referencing resources.
+#Every resource has a selfLink (REST API) that represents the resource.
+
+#======================================================================#
+# Resource 2: Creating Denpha web-server Subnet
+#======================================================================#
+- name: {{prod_webserver_sn_name}}
+  type: compute.v1.subnetwork
+  properties:
+    description: {{prod_webserver_sn_description}}
+    ipCidrRange: {{prod_webserver_sn_cidr}}
+    network: {{prod_webserver_sn_network}}
+    region: {{prod_webserver_sn_region}}
+    labels: # UPDATED!!! Added Labels
+
+#======================================================================#
+# Resource 3: Creating Denpha app-server Subnet
+#======================================================================#
+- name: {{prod_appserver_sn_name}}
+  type: compute.v1.subnetwork
+  properties:
+    description: {{prod_appserver_sn_description}}
+    ipCidrRange: {{prod_appserver_sn_cidr}}
+    network: {{prod_appserver_sn_network}}
+    region: {{prod_appserver_sn_region}}
+    labels: # UPDATED!!! Added Labels
+
+ #======================================================================#
+ # Resource 4: Creating Denpha db-server Subnet
+ #======================================================================#
+- name: {{prod_dbserver_sn_name}}
+  type: compute.v1.subnetwork
+  properties:
+    description: {{prod_dbserver_sn_description}}
+    ipCidrRange: {{prod_dbserver_sn_cidr}}
+    network: {{prod_dbserver_sn_network}}
+    region: {{prod_dbserver_sn_region}} 
+    labels: # UPDATED!!! Added Labels

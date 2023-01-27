@@ -1,0 +1,30 @@
+#======================================================================#
+# CREATE AN EXTERNAL STATIC LOAD BALANCER
+#======================================================================#
+# Resource 8 Variable: "Creating a External (Public) Static IP"
+# Reserve a Static External/Public IP for HTTP/HTTPS LoadBalancer. To mininize your costs, you could go with Standard networkTier
+# Make sure the resource type name should be >>>>>compute.v1.globalAddress<<<<<<
+#======================================================================#
+resources:
+- name: {{prod_external_lb_ip_name}}
+  type: compute.v1.globalAddress
+  properties: 
+    description: {{prod_external_lb_ip_description}}
+    networkTier: {{prod_external_lb_ip_networkTier}}
+    addressType: {{prod_external_lb_ip_addressType}}
+    ipVersion: IPV4
+
+#======================================================================#
+# Resource 9 Variables: This resource provisions static internal IP for Internal Load Balancer
+#======================================================================#
+# Reserve a Static internal IP for HTTP/HTTPS LoadBalancer
+#======================================================================#
+- name: {{prod_internal_lb_ip_name}}
+  type: compute.v1.address
+  properties: 
+    description: {{prod_internal_lb_ip_description}}
+    addressType: {{prod_internal_lb_ip_addressType}}
+    region: {{prod_internal_lb_ip_region}}
+    #subnetwork: https://www.googleapis.com/compute/v1/projects/mbandianyere-dev/regions/us-central1/subnetworks/denpha-prod-web-servers-sn
+    subnetwork: {{prod_internal_lb_ip_subnetwork}}
+    address: {{prod_internal_ip_address}}

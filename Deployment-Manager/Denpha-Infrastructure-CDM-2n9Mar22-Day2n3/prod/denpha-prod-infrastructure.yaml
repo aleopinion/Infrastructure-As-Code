@@ -1,0 +1,456 @@
+######################### VPC CREATION ########################################
+#NOTES/single quotes can also be used for description/ you can set global or regional./autoCreate...false if to be customized/
+#Value for routingMode:must be in caps and represents the routing of the subnetworks.
+
+resources:
+#Resource 1: Denpha VPC Network
+- name: denpha-prod-vpc
+  type: compute.v1.network
+  properties:
+    description: "This network is for the Denpha e-commerce application"
+    routingConfig:
+      routingMode: REGIONAL
+    autoCreateSubnetworks: false
+
+######################### SUBNET CREATION ########################################
+#NOTES. resource dependency applies here as the subnet depends on the url or the vpc once created. $(ref) is how you declare a string when referencing resources.
+#Every resource has a selfLink (REST API) that represents the resource.
+
+# Resource 2: Denpha prod web-servers Subnet
+- name: denpha-prod-web-server-subnet
+  type: compute.v1.subnetwork
+  properties:
+    description: "This subnet is for the Denpha prod web-servers"
+    ipCidrRange: 10.130.0.0/20
+    network: $(ref.denpha-prod-vpc.selfLink)
+    region: us-central1
+
+# Resource 3: Denpha prod app-servers Subnet
+- name: denpha-prod-app-server-subnet
+  type: compute.v1.subnetwork
+  properties:
+    description: "This subnet is for the Denpha prod app-servers"
+    ipCidrRange: 10.140.0.0/20
+    network: $(ref.denpha-prod-vpc.selfLink)
+    region: us-central1
+
+ # Resource 4: Denpha prod db-servers Subnet
+- name: denpha-prod-db-server-subnet
+  type: compute.v1.subnetwork
+  properties:
+    description: "This subnet is for the Denpha prod db-servers"
+    ipCidrRange: 10.150.0.0/20
+    network: $(ref.denpha-prod-vpc.selfLink)
+    region: us-central1   
+
+######################### FIREWALL RULE CREATION ########################################
+
+# Resource 5: This creates a firewall rule for Prod Web Servers
+# Web servers firewall rule HTTP/80 and HTTPS/443
+- name: denpha-prod-web-servers-fr-allow-http-https
+  type: compute.v1.firewall
+  properties:
+    description: "This firewall rule grants http/https access from the Prod External LoadBalancer"
+    network: $(ref.denpha-prod-vpc.selfLink)
+    #sourceRanges: ["$(ref.external-load-balancer-ip-prod.selfLink)/32"] 
+    # Keeping the webservers Private but granting public access
+    sourceRanges: ["0.0.0.0/0"]
+    targetTags: ["prod-web-servers"]
+    allowed:
+    - IPProtocol: TCP
+      ports: ["80", "443"]
+
+# Resource 6: This creates a firewall rule for Prod App Servers
+# App servers firewall rule HTTP/80 and HTTPS/443 Network Access
+- name: denpha-prod-app-servers-fr-allow-http-https
+  type: compute.v1.firewall
+  properties:
+    description: "This firewall rule grants http/https access from the Prod App Internal LoadBalancer"
+    network: $(ref.denpha-prod-vpc.selfLink)
+    #sourceRanges: ["$(ref.external-load-balancer-ip-prod.selfLink)/32"]
+    sourceRanges: ["10.130.0.0/20"] #For now but will be updated to Bastion host before use
+    #The sourceRanges for the app firewall rule should be the CIDR for the Internal LB. but we do not have that yet. So, we will use the CIDR for the appserver subnet.
+    targetTags: ["prod-app-servers"]
+    allowed:
+    - IPProtocol: TCP
+      ports: ["80", "443"]
+
+# Resource 7: This creates a firewall rule for Prod DB Servers
+# DB servers firewall rule MySQL/3306 Network Access
+- name: denpha-prod-db-servers-fr-allow-mysql
+  type: compute.v1.firewall
+  properties:
+    description: "This firewall rule grants mysql access from the Prod db-server network"
+    network: $(ref.denpha-prod-vpc.selfLink)
+    #sourceRanges: ["$(ref.external-load-balancer-ip-prod.selfLink)/32"]
+    sourceRanges: ["10.140.0.0/20"] #For now but will be updated to Bastion host before use.
+    targetTags: ["prod-db-servers"]
+    allowed:
+    - IPProtocol: TCP
+      ports: ["3306"]   
+      #Since multiple values are not needed, we don't have to []
+
+######################### IP - EXTERNAL (PUBLIC) & INTERNAL (PRIVATE) IP CREATION ########################################
+
+# Resource 8: This resource provisions an External (Public) Static IP"
+# Reserve a Static External/Public IP for HTTP/HTTPS LoadBalancer. To mininize your costs, you could go with Standard networkTier instead of Premium Tier
+# Make sure the <RESOURCE TYPE NAME> should be >>>>>compute.v1.globalAddress<<<<<<
+- name: denpha-prod-external-load-balancer-ip
+  type: compute.v1.globalAddress
+  properties: 
+    description: "This static external IP will be reserved for the Prod External LoadBalancer"
+    networkTier: PREMIUM # => PREMIUM => You are taking advantage of google internal backbone network with their PoP => with the Premium option
+    addressType: EXTERNAL #The type of address to reserve, either INTERNAL or EXTERNAL. If unspecified, defaults to EXTERNAL
+    ipVersion: IPV4
+
+# Resource 9: This resource provisions a static internal IP for Internal Load Balancer
+# Reserve a Static internal IP for HTTP/HTTPS LoadBalancer
+- name: denpha-prob-internal-load-balancer-ip
+  type: compute.v1.address
+  properties: 
+    description: "This static internal IP will be reserved for the Prod Internal LoadBalancer"
+    addressType: INTERNAL #The type of address to reserve, either INTERNAL or EXTERNAL. If unspecified, defaults to EXTERNAL
+    region: us-central1
+    #subnetwork: https://www.googleapis.com/compute/v1/projects/mbandianyere-dev/regions/us-central1/subnetworks/denpha-prod-web-servers-sn
+    subnetwork: $(ref.denpha-prod-web-server-subnet.selfLink)
+    address: "10.130.0.5" #Taken from the IP range of the webserver network
+
+
+######################### COMPUTE RESOURCE CREATION ########################################
+
+# Resource 10: This is to create web-server resources for denpha-prod
+# web-server-1-resource-prod, us-central1-a
+- name: denpha-prod-web-server-1-az-a
+  type: compute.v1.instance
+  properties:
+    description: "This webserver will be provisioned in us-central1-a AZ"
+    zone: us-central1-a
+    machineType: zones/us-central1-a/machineTypes/e2-medium
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true #In a real-world situation such as production environments, you set the “autodelete” to “false” 
+      initializeParams:
+        sourceImage: projects/centos-cloud/global/images/family/centos-7
+    networkInterfaces:
+    - subnetwork: $(ref.denpha-prod-web-server-subnet.selfLink)
+    tags:
+      items:
+      - prod-web-servers
+    labels: # UPDATED!!! Added Labels
+      application-id: cg468       
+      owner: operations-team       
+      environment: prod
+      budget-code: cg-denpha-prod
+      patch-group: pg-prod
+      compliance-classification: nist
+      data-classification: pii
+      lob: e-commerce
+      project-manager: alexander-dirus
+      project-name: denpha-project
+      region: us-central1
+
+# Resource 11: This is to create web-server resources for denpha-prod
+# web-server-1-resource-prod, us-central1-b
+- name: denpha-prod-web-server-1-az-b
+  type: compute.v1.instance
+  properties:
+    description: "This webserver will be provisioned in us-central1-b AZ"
+    zone: us-central1-b
+    machineType: zones/us-central1-b/machineTypes/e2-medium
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: projects/centos-cloud/global/images/family/centos-7
+    networkInterfaces:
+    - subnetwork: $(ref.denpha-prod-web-server-subnet.selfLink)
+    tags:
+      items:
+      - prod-web-servers
+    labels: # UPDATED!!! Added Labels
+      application-id: cg468       
+      owner: operations-team       
+      environment: prod
+      budget-code: cg-denpha-prod
+      patch-group: pg-prod
+      compliance-classification: nist
+      data-classification: pii
+      lob: e-commerce
+      project-manager: alexander-dirus
+      project-name: denpha-project
+      region: us-central1
+
+# subnetwork: https://www.googleapis.com/compute/v1/projects/denpha-project/regions/us-central1/subnetworks/denpha-prod-web-servers-subnet
+
+# Assignment is to create the instance in the app server us-central1-b
+
+# Resource 12: This is to create web-server resources for denpha-prod
+# web-server-2-resource-prod, us-central1-a
+- name: denpha-prod-web-server-2-az-a
+  type: compute.v1.instance
+  properties:
+    description: "This webserver will be provisioned in us-central1-a AZ"
+    zone: us-central1-a
+    machineType: zones/us-central1-a/machineTypes/e2-medium
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: projects/centos-cloud/global/images/family/centos-7
+    networkInterfaces:
+    - subnetwork: $(ref.denpha-prod-web-server-subnet.selfLink)
+    tags:
+      items:
+      - prod-web-servers
+    labels: # UPDATED!!! Added Labels
+      application-id: cg468       
+      owner: operations-team       
+      environment: prod
+      budget-code: cg-denpha-prod
+      patch-group: pg-prod
+      compliance-classification: nist
+      data-classification: pii
+      lob: e-commerce
+      project-manager: alexander-dirus
+      project-name: denpha-project
+      region: us-central1
+
+
+# Resource 13: This is to create web-server resources for denpha-prod
+# web-server-2-resource-prod, us-central1-b
+- name: denpha-prod-web-server-2-az-b
+  type: compute.v1.instance
+  properties:
+    description: "This webserver will be provisioned in us-central1-b AZ"
+    zone: us-central1-b
+    machineType: zones/us-central1-b/machineTypes/e2-medium
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: projects/centos-cloud/global/images/family/centos-7
+    networkInterfaces:
+    - subnetwork: $(ref.denpha-prod-web-server-subnet.selfLink)
+    tags:
+      items:
+      - prod-web-servers
+    labels: # UPDATED!!! Added Labels
+      application-id: cg468       
+      owner: operations-team       
+      environment: prod
+      budget-code: cg-denpha-prod
+      patch-group: pg-prod
+      compliance-classification: nist
+      data-classification: pii
+      lob: e-commerce
+      project-manager: alexander-dirus
+      project-name: denpha-project
+      region: us-central1
+
+# subnetwork: https://www.googleapis.com/compute/v1/projects/denpha-project/regions/us-central1/subnetworks/denpha-prod-web-servers-sn
+# To deploy, run:
+# gcloud deployment-manager deployments create denpha-prod-vpc-subnetwork-deployment --config="denpha-prod-infrastructure.yaml" --description="This network is for the Denpha e-commerce application"
+
+# Resource 14: This is to create app-server resources for denpha-prod
+# app-server-1-resource-prod, us-central1-a
+- name: denpha-prod-app-server-1-az-a
+  type: compute.v1.instance
+  properties:
+    description: "This appserver will be provisioned in us-central1-a AZ"
+    zone: us-central1-a
+    machineType: zones/us-central1-a/machineTypes/e2-medium
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: projects/centos-cloud/global/images/family/centos-7
+    networkInterfaces:
+    - subnetwork: $(ref.denpha-prod-app-server-subnet.selfLink)
+    tags:
+      items:
+      - prod-app-servers
+    labels: # UPDATED!!! Added Labels
+      application-id: cg468       
+      owner: operations-team       
+      environment: prod
+      budget-code: cg-denpha-prod
+      patch-group: pg-prod
+      compliance-classification: nist
+      data-classification: pii
+      lob: e-commerce
+      project-manager: alexander-dirus
+      project-name: denpha-project
+      region: us-central1
+
+# Resource 15: This is to create app-server resources for denpha-prod
+# app-server-1-resource-prod, us-central1-b
+- name: denpha-prod-app-server-1-az-b
+  type: compute.v1.instance
+  properties:
+    description: "This appserver will be provisioned in us-central1-b AZ"
+    zone: us-central1-b
+    machineType: zones/us-central1-b/machineTypes/e2-medium
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: projects/centos-cloud/global/images/family/centos-7
+    networkInterfaces:
+    - subnetwork: $(ref.denpha-prod-app-server-subnet.selfLink)
+    tags:
+      items:
+      - prod-app-servers
+    labels: # UPDATED!!! Added Labels
+      application-id: cg468       
+      owner: operations-team       
+      environment: prod
+      budget-code: cg-denpha-prod
+      patch-group: pg-prod
+      compliance-classification: nist
+      data-classification: pii
+      lob: e-commerce
+      project-manager: alexander-dirus
+      project-name: denpha-project
+      region: us-central1
+
+
+# subnetwork: https://www.googleapis.com/compute/v1/projects/denpha-project/regions/us-central1/subnetworks/denpha-prod-web-servers-sn
+
+# Assignment is to create the instance in the app server us-central1-a&b
+
+# Resource 16: This is to create app-server resources for denpha-prod
+# app-server-2-resource-prod, us-central1-a
+- name: denpha-prod-app-server-2-az-a
+  type: compute.v1.instance
+  properties:
+    description: "This appserver will be provisioned in us-central1-a AZ"
+    zone: us-central1-a
+    machineType: zones/us-central1-a/machineTypes/e2-medium
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: projects/centos-cloud/global/images/family/centos-7
+    networkInterfaces:
+    - subnetwork: $(ref.denpha-prod-app-server-subnet.selfLink)
+    tags:
+      items:
+      - prod-app-servers
+    labels: # UPDATED!!! Added Labels
+      application-id: cg468       
+      owner: operations-team       
+      environment: prod
+      budget-code: cg-denpha-prod
+      patch-group: pg-prod
+      compliance-classification: nist
+      data-classification: pii
+      lob: e-commerce
+      project-manager: alexander-dirus
+      project-name: denpha-project
+      region: us-central1
+
+
+# Resource 17: This is to create app-server resources for denpha-prod
+# app-server-2-resource-prod, us-central1-b
+- name: denpha-prod-app-server-2-az-b
+  type: compute.v1.instance
+  properties:
+    description: "This appserver will be provisioned in us-central1-b AZ"
+    zone: us-central1-b
+    machineType: zones/us-central1-b/machineTypes/e2-medium
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: projects/centos-cloud/global/images/family/centos-7
+    networkInterfaces:
+    - subnetwork: $(ref.denpha-prod-app-server-subnet.selfLink)
+    tags:
+      items:
+      - prod-app-servers
+    labels: # UPDATED!!! Added Labels
+      application-id: cg468       
+      owner: operations-team       
+      environment: prod
+      budget-code: cg-denpha-prod
+      patch-group: pg-prod
+      compliance-classification: nist
+      data-classification: pii
+      lob: e-commerce
+      project-manager: alexander-dirus
+      project-name: denpha-project
+      region: us-central1
+
+# subnetwork: https://www.googleapis.com/compute/v1/projects/denpha-project/regions/us-central1/subnetworks/denpha-prod-web-servers-sn
+# To deploy, run:
+# gcloud deployment-manager deployments create denpha-prod-vpc-subnetwork-deployment --config="denpha-prod-infrastructure.yaml" --description="This network is for the Denpha e-commerce application"
+
+
+# Resource 18: This is to create db-server resources for denpha-prod
+# db-server-1-resource-prod, us-central1-a
+- name: denpha-prod-db-server-1-az-a
+  type: compute.v1.instance
+  properties:
+    description: "This dbserver will be provisioned in us-central1-a AZ"
+    zone: us-central1-a
+    machineType: zones/us-central1-a/machineTypes/e2-medium
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: projects/centos-cloud/global/images/family/centos-7
+    networkInterfaces:
+    - subnetwork: $(ref.denpha-prod-db-server-subnet.selfLink)
+    tags:
+      items:
+      - pro-db-servers
+
+
+# subnetwork: https://www.googleapis.com/compute/v1/projects/denpha-project/regions/us-central1/subnetworks/denpha-prod-web-servers-sn
+
+# Assignment is to create the instance in the db server us-central1-a&b
+
+# Resource 19: This is to create db-server resources for denpha-prod
+# db-server-2-resource-prod, us-central1-b
+- name: denpha-prod-db-server-2-az-b
+  type: compute.v1.instance
+  properties:
+    description: "This dbserver will be provisioned in us-central1-b AZ"
+    zone: us-central1-b
+    machineType: zones/us-central1-b/machineTypes/e2-medium
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: projects/centos-cloud/global/images/family/centos-7
+    networkInterfaces:
+    - subnetwork: $(ref.denpha-prod-db-server-subnet.selfLink)
+    tags:
+      items:
+      - pro-db-servers
+
+
+# Run the command below to update the code.
+# gcloud deployment-manager deployments update denpha-prod-vpc-subnetwork-deployment --config="denpha-prod-infrastructure.yaml"
+
+# UPDATE and CREATE AN EXTERNAL STATIC LOAD BALANCER after resrving static IPs for them
